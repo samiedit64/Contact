@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Official links and contact for Sami, The King of Edit. Gaming, Editing, Coding.">
+    <meta name="theme-color" content="#0a0a0b">
+    <meta name="color-scheme" content="dark">
+    <title>Sami — The King of Edit · Contact</title>
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0b'/%3E%3Cpath d='M6 12V6h6M20 6h6v6M26 20v6h-6M12 26H6v-6' fill='none' stroke='%23ff5b2e' stroke-width='3'/%3E%3C/svg%3E">
+
+    <!-- If JavaScript is available, hide the animated parts until the intro takes over.
+         A CSS failsafe below reveals everything if the scripts never arrive. -->
+    <script>
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.documentElement.classList.add('will-animate');
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js">
+    <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.core.js">
+
+    <style>
+        /* ==========================================================
+           1. Design tokens — the single source of truth.
+              The three.js scene reads --accent and --ink from here.
+           ========================================================== */
+        :root {
+            color-scheme: dark;
+
+            --bg: #0a0a0b;
+            --panel: rgba(10, 10, 11, 0.82);
+            --ink: #f2efe9;
+            --muted: #8e8b85;
+            --line: rgba(242, 239, 233, 0.14);
+            --accent: #ff5b2e;
+
+            --font-display: 'Bricolage Grotesque', 'Arial Narrow', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+            --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+            --row-h: 64px;
+            --gutter: clamp(20px, 4vw, 56px);
+        }
+
+        /* ==========================================================
+           2. Base
+           ========================================================== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+
+        body {
+            min-height: 100vh;
+            min-height: 100svh;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--font-display);
+            font-weight: 500;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        .sr-only {
+            position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+            overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+        }
+
+        /* WebGL scene sits behind everything */
+        #scene {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: block;
+        }
+
+        /* Edge darkening keeps type readable over the frames */
+        .veil {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background:
+                radial-gradient(120% 90% at 28% 50%, transparent 35%, rgba(10, 10, 11, 0.78) 100%),
+                linear-gradient(to top, rgba(10, 10, 11, 0.94), rgba(10, 10, 11, 0.55) 22%, transparent 48%);
+        }
+
+        /* Static film grain (no animation, no blend mode: cheap to composite) */
+        .grain {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* ==========================================================
+           3. Layout
+           ========================================================== */
+        .stage {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            min-height: 100svh;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(340px, 520px);
+            gap: clamp(28px, 6vw, 96px);
+            padding: var(--gutter);
+            padding-bottom: max(var(--gutter), env(safe-area-inset-bottom));
+        }
+
+        /* ---------- Identity (left) ---------- */
+        .id {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 32px;
+            min-width: 0;
+        }
+
+        .id__eyebrow {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .id__main { margin-top: auto; }
+
+        h1 { font-weight: 800; }
+
+        .h1__vis {
+            display: block;
+            font-size: clamp(5rem, 18vw, 15rem);
+            font-weight: 800;
+            font-variation-settings: 'opsz' 96;
+            line-height: 0.84;
+            letter-spacing: -0.05em;
+            text-transform: uppercase;
+        }
+
+        .mask {
+            display: inline-block;
+            overflow: hidden;
+            padding: 0.06em 0 0.03em;
+            margin: -0.06em 0 -0.03em;
+            vertical-align: top;
+        }
+
+        .char { display: inline-block; will-change: transform; }
+
+        .id__tag {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: clamp(14px, 2vw, 24px);
+            font-family: var(--font-mono);
+            font-size: clamp(13px, 1.4vw, 17px);
+            font-weight: 500;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+
+        .id__tag::before {
+            content: '';
+            width: clamp(28px, 4vw, 56px);
+            height: 3px;
+            background: var(--accent);
+        }
+
+        .id__lede {
+            margin-top: 14px;
+            max-width: 34ch;
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--muted);
+        }
+
+        .gec {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 28px;
+            list-style: none;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .gec b { color: var(--accent); font-weight: 500; }
+
+        /* ---------- Timeline panel (right) ---------- */
+        .panel {
+            align-self: center;
+            background: var(--panel);
+            border: 1px solid var(--line);
+        }
+
+        .panel__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 14px 16px 10px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .panel__head strong { color: var(--ink); font-weight: 500; }
+
+        /* Ruler: minor tick every 12px, major every 60px */
+        .ruler {
+            height: 14px;
+            border-bottom: 1px solid var(--line);
+            background:
+                repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 60px) 0 0 / 100% 100% no-repeat,
+                repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 12px) 0 100% / 100% 45% no-repeat;
+        }
+
+        .tracks {
+            position: relative;
+            list-style: none;
+        }
+
+        .clip-row + .clip-row { border-top: 1px solid var(--line); }
+
+        /* Playhead: slides to the active clip */
+        .playhead {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: calc(var(--row-h) - 16px);
+            background: var(--accent);
+            z-index: 2;
+            pointer-events: none;
+            transform: translateY(8px);
+            transition: transform 0.3s var(--ease-out);
+        }
+
+        html.has-gsap .playhead { transition: none; }
+
+        /* ---------- Clip ---------- */
+        .clip {
+            position: relative;
+            display: grid;
+            grid-template-columns: 2.1rem 22px minmax(0, 1fr) 20px;
+            align-items: center;
+            gap: 14px;
+            min-height: var(--row-h);
+            padding: 10px 18px 10px 20px;
+            color: var(--ink);
+            text-decoration: none;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* The "scrub" fill: exits faster than it enters */
+        .clip::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1);
+        }
+
+        .clip > * { position: relative; z-index: 1; transition: color 0.2s ease; }
+
+        .clip__idx {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .clip__icon { width: 22px; height: 22px; fill: currentColor; }
+
+        .clip__text { display: grid; gap: 3px; min-width: 0; }
+
+        .clip__name {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            line-height: 1.15;
+        }
+
+        /* Verified badge: a mask so it takes the text colour, including on the orange hover fill */
+        .clip__name::after,
+        .id__tag::after {
+            content: '';
+            display: inline-block;
+            width: 0.85em;
+            height: 0.85em;
+            margin-left: 0.4em;
+            vertical-align: -0.08em;
+            background: var(--accent);
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M21.15 12.00 L21.10 12.32 L20.95 12.63 L20.72 12.92 L20.46 13.19 L20.20 13.45 L19.98 13.70 L19.82 13.95 L19.75 14.22 L19.76 14.52 L19.82 14.85 L19.92 15.20 L20.01 15.57 L20.06 15.93 L20.04 16.27 L19.92 16.57 L19.72 16.82 L19.43 17.01 L19.10 17.15 L18.73 17.26 L18.38 17.35 L18.06 17.46 L17.80 17.60 L17.60 17.80 L17.46 18.06 L17.35 18.38 L17.26 18.73 L17.15 19.10 L17.01 19.43 L16.82 19.72 L16.58 19.92 L16.27 20.04 L15.93 20.06 L15.57 20.01 L15.20 19.92 L14.85 19.82 L14.52 19.76 L14.22 19.75 L13.95 19.82 L13.70 19.98 L13.45 20.20 L13.19 20.46 L12.92 20.72 L12.63 20.95 L12.32 21.10 L12.00 21.15 L11.68 21.10 L11.37 20.95 L11.08 20.72 L10.81 20.46 L10.55 20.20 L10.30 19.98 L10.05 19.82 L9.78 19.75 L9.48 19.76 L9.15 19.82 L8.80 19.92 L8.43 20.01 L8.07 20.06 L7.73 20.04 L7.43 19.92 L7.18 19.72 L6.99 19.43 L6.85 19.10 L6.74 18.73 L6.65 18.38 L6.54 18.06 L6.40 17.80 L6.20 17.60 L5.94 17.46 L5.62 17.35 L5.27 17.26 L4.90 17.15 L4.57 17.01 L4.28 16.82 L4.08 16.57 L3.96 16.27 L3.94 15.93 L3.99 15.57 L4.08 15.20 L4.18 14.85 L4.24 14.52 L4.25 14.22 L4.18 13.95 L4.02 13.70 L3.80 13.45 L3.54 13.19 L3.28 12.92 L3.05 12.63 L2.90 12.32 L2.85 12.00 L2.90 11.68 L3.05 11.37 L3.28 11.08 L3.54 10.81 L3.80 10.55 L4.02 10.30 L4.18 10.05 L4.25 9.78 L4.24 9.48 L4.18 9.15 L4.08 8.80 L3.99 8.43 L3.94 8.07 L3.96 7.73 L4.08 7.42 L4.28 7.18 L4.57 6.99 L4.90 6.85 L5.27 6.74 L5.62 6.65 L5.94 6.54 L6.20 6.40 L6.40 6.20 L6.54 5.94 L6.65 5.62 L6.74 5.27 L6.85 4.90 L6.99 4.57 L7.18 4.28 L7.42 4.08 L7.73 3.96 L8.07 3.94 L8.43 3.99 L8.80 4.08 L9.15 4.18 L9.48 4.24 L9.78 4.25 L10.05 4.18 L10.30 4.02 L10.55 3.80 L10.81 3.54 L11.08 3.28 L11.37 3.05 L11.68 2.90 L12.00 2.85 L12.32 2.90 L12.63 3.05 L12.92 3.28 L13.19 3.54 L13.45 3.80 L13.70 4.02 L13.95 4.18 L14.22 4.25 L14.52 4.24 L14.85 4.18 L15.20 4.08 L15.57 3.99 L15.93 3.94 L16.27 3.96 L16.58 4.08 L16.82 4.28 L17.01 4.57 L17.15 4.90 L17.26 5.27 L17.35 5.62 L17.46 5.94 L17.60 6.20 L17.80 6.40 L18.06 6.54 L18.38 6.65 L18.73 6.74 L19.10 6.85 L19.43 6.99 L19.72 7.18 L19.92 7.42 L20.04 7.73 L20.06 8.07 L20.01 8.43 L19.92 8.80 L19.82 9.15 L19.76 9.48 L19.75 9.78 L19.82 10.05 L19.98 10.30 L20.20 10.55 L20.46 10.81 L20.72 11.08 L20.95 11.37 L21.10 11.68Z M6.6 12.3L7.9 11L10.5 13.6L16.1 8L17.4 9.3L10.5 16.2Z'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M21.15 12.00 L21.10 12.32 L20.95 12.63 L20.72 12.92 L20.46 13.19 L20.20 13.45 L19.98 13.70 L19.82 13.95 L19.75 14.22 L19.76 14.52 L19.82 14.85 L19.92 15.20 L20.01 15.57 L20.06 15.93 L20.04 16.27 L19.92 16.57 L19.72 16.82 L19.43 17.01 L19.10 17.15 L18.73 17.26 L18.38 17.35 L18.06 17.46 L17.80 17.60 L17.60 17.80 L17.46 18.06 L17.35 18.38 L17.26 18.73 L17.15 19.10 L17.01 19.43 L16.82 19.72 L16.58 19.92 L16.27 20.04 L15.93 20.06 L15.57 20.01 L15.20 19.92 L14.85 19.82 L14.52 19.76 L14.22 19.75 L13.95 19.82 L13.70 19.98 L13.45 20.20 L13.19 20.46 L12.92 20.72 L12.63 20.95 L12.32 21.10 L12.00 21.15 L11.68 21.10 L11.37 20.95 L11.08 20.72 L10.81 20.46 L10.55 20.20 L10.30 19.98 L10.05 19.82 L9.78 19.75 L9.48 19.76 L9.15 19.82 L8.80 19.92 L8.43 20.01 L8.07 20.06 L7.73 20.04 L7.43 19.92 L7.18 19.72 L6.99 19.43 L6.85 19.10 L6.74 18.73 L6.65 18.38 L6.54 18.06 L6.40 17.80 L6.20 17.60 L5.94 17.46 L5.62 17.35 L5.27 17.26 L4.90 17.15 L4.57 17.01 L4.28 16.82 L4.08 16.57 L3.96 16.27 L3.94 15.93 L3.99 15.57 L4.08 15.20 L4.18 14.85 L4.24 14.52 L4.25 14.22 L4.18 13.95 L4.02 13.70 L3.80 13.45 L3.54 13.19 L3.28 12.92 L3.05 12.63 L2.90 12.32 L2.85 12.00 L2.90 11.68 L3.05 11.37 L3.28 11.08 L3.54 10.81 L3.80 10.55 L4.02 10.30 L4.18 10.05 L4.25 9.78 L4.24 9.48 L4.18 9.15 L4.08 8.80 L3.99 8.43 L3.94 8.07 L3.96 7.73 L4.08 7.42 L4.28 7.18 L4.57 6.99 L4.90 6.85 L5.27 6.74 L5.62 6.65 L5.94 6.54 L6.20 6.40 L6.40 6.20 L6.54 5.94 L6.65 5.62 L6.74 5.27 L6.85 4.90 L6.99 4.57 L7.18 4.28 L7.42 4.08 L7.73 3.96 L8.07 3.94 L8.43 3.99 L8.80 4.08 L9.15 4.18 L9.48 4.24 L9.78 4.25 L10.05 4.18 L10.30 4.02 L10.55 3.80 L10.81 3.54 L11.08 3.28 L11.37 3.05 L11.68 2.90 L12.00 2.85 L12.32 2.90 L12.63 3.05 L12.92 3.28 L13.19 3.54 L13.45 3.80 L13.70 4.02 L13.95 4.18 L14.22 4.25 L14.52 4.24 L14.85 4.18 L15.20 4.08 L15.57 3.99 L15.93 3.94 L16.27 3.96 L16.58 4.08 L16.82 4.28 L17.01 4.57 L17.15 4.90 L17.26 5.27 L17.35 5.62 L17.46 5.94 L17.60 6.20 L17.80 6.40 L18.06 6.54 L18.38 6.65 L18.73 6.74 L19.10 6.85 L19.43 6.99 L19.72 7.18 L19.92 7.42 L20.04 7.73 L20.06 8.07 L20.01 8.43 L19.92 8.80 L19.82 9.15 L19.76 9.48 L19.75 9.78 L19.82 10.05 L19.98 10.30 L20.20 10.55 L20.46 10.81 L20.72 11.08 L20.95 11.37 L21.10 11.68Z M6.6 12.3L7.9 11L10.5 13.6L16.1 8L17.4 9.3L10.5 16.2Z'/%3E%3C/svg%3E") center / contain no-repeat;
+        }
+
+        .clip__name::after { background: currentColor; }
+        .clip:hover .clip__name::after,
+        .clip:focus-visible .clip__name::after,
+        .clip:active .clip__name::after { background: var(--bg); }
+
+        .id__tag::after { width: 1em; height: 1em; margin-left: 0.5em; }
+
+        .clip__handle {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .clip__arrow {
+            width: 20px;
+            height: 20px;
+            color: var(--muted);
+            transition: transform 0.3s var(--ease-out), color 0.2s ease;
+        }
+
+        @media (hover: hover) {
+            .clip:hover::before { transform: scaleX(1); transition: transform 0.5s var(--ease-out); }
+            .clip:hover .clip__idx,
+            .clip:hover .clip__handle,
+            .clip:hover .clip__arrow { color: rgba(10, 10, 11, 0.72); }
+            .clip:hover .clip__name,
+            .clip:hover .clip__icon { color: var(--bg); }
+            .clip:hover .clip__arrow { transform: translate(3px, -3px); }
+        }
+
+        .clip:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
+        .clip:focus-visible::before,
+        .clip:active::before { transform: scaleX(1); transition: transform 0.5s var(--ease-out); }
+        .clip:focus-visible .clip__idx,
+        .clip:focus-visible .clip__handle,
+        .clip:focus-visible .clip__arrow,
+        .clip:active .clip__idx,
+        .clip:active .clip__handle,
+        .clip:active .clip__arrow { color: rgba(10, 10, 11, 0.72); }
+        .clip:focus-visible .clip__name,
+        .clip:focus-visible .clip__icon,
+        .clip:active .clip__name,
+        .clip:active .clip__icon { color: var(--bg); }
+
+        /* ==========================================================
+           4. Phones and tablets
+           ========================================================== */
+        @media (max-width: 859px) {
+            .stage {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 40px;
+            }
+            .id { gap: 28px; padding-top: 4vh; }
+            .h1__vis { font-size: clamp(4.5rem, 26vw, 9rem); }
+            .panel { align-self: stretch; }
+        }
+
+        @media (max-width: 380px) {
+            .clip { gap: 10px; padding-left: 14px; padding-right: 12px; grid-template-columns: 1.8rem 20px minmax(0, 1fr) 18px; }
+            .clip__name { font-size: 16px; }
+        }
+
+        /* ==========================================================
+           5. Motion preferences and fallbacks
+           ========================================================== */
+        /* Hidden only while the intro is pending; revealed anyway after 4s if scripts fail */
+        html.will-animate .id,
+        html.will-animate .panel,
+        html.will-animate #scene {
+            visibility: hidden;
+            animation: failsafe-reveal 0s 4s forwards;
+        }
+
+        @keyframes failsafe-reveal { to { visibility: visible; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .clip::before,
+            .clip__arrow,
+            .clip > *,
+            .playhead { transition: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div class="veil" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- Icon sprite -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+            <symbol id="i-arrow" viewBox="0 0 24 24">
+                <path d="M7 17 17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+            </symbol>
+            <symbol id="i-info" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </symbol>
+            <symbol id="i-telegram" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-2.01 1.28-5.68 3.77-.54.37-1.03.55-1.47.54-.48-.01-1.4-.27-2.08-.49-.84-.27-1.51-.42-1.45-.89.03-.25.38-.51 1.08-.78 4.23-1.84 7.05-3.04 8.46-3.61 4.03-1.67 4.87-1.96 5.42-1.97.12 0 .39.03.56.17.15.12.19.28.21.4-.02.07.01.28-.01.42z"/>
+            </symbol>
+            <symbol id="i-user" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+            </symbol>
+            <symbol id="i-whatsapp" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </symbol>
+            <symbol id="i-youtube" viewBox="0 0 24 24">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </symbol>
+            <symbol id="i-facebook" viewBox="0 0 24 24">
+                <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/>
+            </symbol>
+            <symbol id="i-instagram" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </symbol>
+            <symbol id="i-tiktok" viewBox="0 0 24 24">
+                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+            </symbol>
+            <symbol id="i-email" viewBox="0 0 24 24">
+                <path d="M12 12.713l-11.985-9.713h23.97l-11.985 9.713zm0 2.574l-12-9.725v15.438h24v-15.438l-12 9.725z"/>
+            </symbol>
+        </defs>
+    </svg>
+
+    <main class="stage">
+
+        <!-- ================= Identity ================= -->
+        <header class="id">
+            <p class="id__eyebrow">Official links</p>
+
+            <div class="id__main">
+                <h1>
+                    <span class="sr-only">Sami — The King of Edit</span>
+                    <span class="h1__vis" aria-hidden="true">
+                        <span class="mask"><span class="char">S</span></span><span class="mask"><span class="char">A</span></span><span class="mask"><span class="char">M</span></span><span class="mask"><span class="char">I</span></span>
+                    </span>
+                </h1>
+                <p class="id__tag" aria-hidden="true">The King of Edit</p>
+                <p class="id__lede">Official links and contact for Sami. Choose a clip to get in touch.</p>
+            </div>
+
+            <ul class="gec" aria-label="G.E.C: Gaming, Editing, Coding">
+                <li><b>G</b>aming</li>
+                <li><b>E</b>diting</li>
+                <li><b>C</b>oding</li>
+            </ul>
+        </header>
+
+        <!-- ================= Timeline ================= -->
+        <section class="panel" aria-labelledby="panel-title">
+            <div class="panel__head">
+                <span id="panel-title">Timeline</span>
+                <span><strong>09</strong> clips</span>
+            </div>
+            <div class="ruler" aria-hidden="true"></div>
+
+            <nav aria-label="Sami's social links and contact">
+                <ol class="tracks">
+                    <li class="playhead" aria-hidden="true" style="list-style:none"></li>
+
+                    <li class="clip-row">
+                        <a class="clip" href="https://samiedit64.github.io/Sami" target="_blank" rel="noopener noreferrer">
+                            <span class="clip__idx" aria-hidden="true">01</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-info"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">About Sami<span class="sr-only"> (opens in a new tab)</span></span>
+                                <span class="clip__handle">samiedit64.github.io/Sami</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+
+                    <li class="clip-row">
+                        <a class="clip" href="https://t.me/SAMIEDIT64_Official" target="_blank" rel="noopener noreferrer">
+                            <span class="clip__idx" aria-hidden="true">02</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-telegram"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">Telegram Channel<span class="sr-only"> (opens in a new tab)</span></span>
+                                <span class="clip__handle">@SAMIEDIT64_Official</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+
+                    <li class="clip-row">
+                        <a class="clip" href="https://t.me/SAMI_EDIT_64" target="_blank" rel="noopener noreferrer">
+                            <span class="clip__idx" aria-hidden="true">03</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-user"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">Telegram User<span class="sr-only"> (opens in a new tab)</span></span>
+                                <span class="clip__handle">@SAMI_EDIT_64</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+
+                    <li class="clip-row">
+                        <!-- TODO: wa.me links need a phone number in international format
+                             (digits only, e.g. https://wa.me/8801XXXXXXXXX). A username does not work here. -->
+                        <a class="clip" href="https://wa.me/SAMI_EDIT_64" target="_blank" rel="noopener noreferrer">
+                            <span class="clip__idx" aria-hidden="true">04</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-whatsapp"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">WhatsApp<span class="sr-only"> (opens in a new tab)</span></span>
+                                <span class="clip__handle">Message on WhatsApp</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+
+                    <li class="clip-row">
+                        <a class="clip" href="https://youtube.com/@Bandicus_edit" target="_blank" rel="noopener noreferrer">
+                            <span class="clip__idx" aria-hidden="true">05</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-youtube"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">YouTube<span class="sr-only"> (opens in a new tab)</span></span>
+                                <span class="clip__handle">@Bandicus_edit</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+
+                    <li class="clip-row">
+                        <a class="clip" href="https://facebook.com/Abdulla.al.sami.2025" target="_blank" rel="noopener noreferrer">
+                            <span class="clip__idx" aria-hidden="true">06</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-facebook"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">Facebook<span class="sr-only"> (opens in a new tab)</span></span>
+                                <span class="clip__handle">Abdulla.al.sami.2025</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+
+                    <li class="clip-row">
+                        <a class="clip" href="https://instagram.com/SAMI_EDIT_64" target="_blank" rel="noopener noreferrer">
+                            <span class="clip__idx" aria-hidden="true">07</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-instagram"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">Instagram<span class="sr-only"> (opens in a new tab)</span></span>
+                                <span class="clip__handle">@SAMI_EDIT_64</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+
+                    <li class="clip-row">
+                        <a class="clip" href="https://tiktok.com/@SAMI_EDIT_64" target="_blank" rel="noopener noreferrer">
+                            <span class="clip__idx" aria-hidden="true">08</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-tiktok"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">TikTok<span class="sr-only"> (opens in a new tab)</span></span>
+                                <span class="clip__handle">@SAMI_EDIT_64</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+
+                    <li class="clip-row">
+                        <a class="clip" href="mailto:abdullaalsami61@gmail.com">
+                            <span class="clip__idx" aria-hidden="true">09</span>
+                            <svg class="clip__icon" aria-hidden="true"><use href="#i-email"/></svg>
+                            <span class="clip__text">
+                                <span class="clip__name">Email</span>
+                                <span class="clip__handle">abdullaalsami61@gmail.com</span>
+                            </span>
+                            <svg class="clip__arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+                        </a>
+                    </li>
+                </ol>
+            </nav>
+        </section>
+    </main>
+
+    <!-- GSAP (classic deferred script runs before the module below) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+
+    <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js" } }
+    </script>
+
+    <script type="module">
+        // Dynamic import: if the CDN is unreachable, the page still works without the 3D scene
+        const THREE = await import('three').catch(() => null);
+
+        const root = document.documentElement;
+        const gsap = window.gsap || null;
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => [...document.querySelectorAll(s)];
+
+        const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+        const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+
+        const cssVars = getComputedStyle(root);
+        const token = (name) => cssVars.getPropertyValue(name).trim();
+
+        /* Shared state between the DOM choreography and the scene */
+        const stage = { intro: 1, speed: 0.1, speedTarget: 0.1, boostTarget: 0 };
+
+        if (gsap) root.classList.add('has-gsap');
+
+        /* ==========================================================
+           WebGL scene: a coil of film frames with viewfinder corners
+           ========================================================== */
+        function initScene() {
+            const canvas = $('#scene');
+            if (!THREE) { root.classList.add('no-webgl'); return null; }
+            let renderer;
+            try {
+                renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+            } catch (err) {
+                root.classList.add('no-webgl');
+                return null;
+            }
+            renderer.setClearColor(0x000000, 0);
+            canvas.addEventListener('webglcontextlost', (e) => e.preventDefault());
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 80);
+
+            const small = matchMedia('(max-width: 720px)').matches;
+            const COUNT = small ? 110 : 180;
+            const RADIUS = 5.5;
+            const ANGLE_STEP = 0.34;   // radians between neighbouring frames
+            const RISE = 0.1;          // vertical step per frame
+
+            // Deterministic pseudo-random so the coil looks the same on every load
+            let s = 0x5a31;
+            const rand = () => {
+                s = (s + 0x6d2b79f5) | 0;
+                let t = Math.imul(s ^ (s >>> 15), 1 | s);
+                t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
+
+            const geometry = new THREE.PlaneGeometry(1.7, 1.0);
+            const seeds = new Float32Array(COUNT);
+            const accents = new Float32Array(COUNT);
+
+            const uniforms = {
+                uTime:   { value: 0 },
+                uScan:   { value: 0 },
+                uBoost:  { value: 0 },
+                uInk:    { value: new THREE.Color(token('--ink')) },
+                uAccent: { value: new THREE.Color(token('--accent')) },
+            };
+
+            const material = new THREE.ShaderMaterial({
+                uniforms,
+                transparent: true,
+                depthWrite: false,
+                side: THREE.DoubleSide,
+                vertexShader: /* glsl */`
+                    attribute float aSeed;
+                    attribute float aAccent;
+                    varying vec2 vUv;
+                    varying float vSeed;
+                    varying float vAccent;
+                    varying float vDepth;
+                    varying float vWorldY;
+                    void main() {
+                        vUv = uv;
+                        vSeed = aSeed;
+                        vAccent = aAccent;
+                        vec4 world = modelMatrix * instanceMatrix * vec4(position, 1.0);
+                        vWorldY = world.y;
+                        vec4 mv = viewMatrix * world;
+                        vDepth = -mv.z;
+                        gl_Position = projectionMatrix * mv;
+                    }`,
+                fragmentShader: /* glsl */`
+                    uniform float uTime;
+                    uniform float uScan;
+                    uniform float uBoost;
+                    uniform vec3 uInk;
+                    uniform vec3 uAccent;
+                    varying vec2 vUv;
+                    varying float vSeed;
+                    varying float vAccent;
+                    varying float vDepth;
+                    varying float vWorldY;
+                    void main() {
+                        vec2 p = (vUv - 0.5) * vec2(1.7, 1.0);
+                        vec2 d = vec2(0.85, 0.5) - abs(p);
+
+                        // Viewfinder corners: thin L-shapes in each corner
+                        float edge = 1.0 - smoothstep(0.016, 0.026, min(d.x, d.y));
+                        float arms = 1.0 - smoothstep(0.24, 0.26, max(d.x, d.y));
+                        float corners = edge * arms;
+
+                        // Scan line sweeping up the coil
+                        float hl = exp(-pow((vWorldY - uScan) * 0.7, 2.0));
+
+                        // REC dot on the accent frames
+                        float r = length(p - vec2(-0.72, 0.37));
+                        float rec = vAccent * (1.0 - smoothstep(0.035, 0.05, r))
+                                  * (0.55 + 0.45 * sin(uTime * 3.0 + vSeed * 6.2831));
+
+                        float fill = 0.02 + 0.07 * hl + 0.01 * sin(vUv.y * 120.0 + uTime * 0.5);
+                        float bright = 0.34 + 0.66 * hl + 0.24 * uBoost;
+                        bright *= mix(0.8, 1.35, vAccent);
+
+                        vec3 col = mix(uInk, uAccent, vAccent);
+                        float fade = mix(1.0, 0.25, smoothstep(9.0, 21.0, vDepth));
+                        float a = (corners * bright + fill + rec) * fade;
+
+                        gl_FragColor = vec4(col, clamp(a, 0.0, 1.0));
+                        #include <colorspace_fragment>
+                    }`,
+            });
+
+            const mesh = new THREE.InstancedMesh(geometry, material, COUNT);
+            const dummy = new THREE.Object3D();
+            for (let i = 0; i < COUNT; i++) {
+                const a = i * ANGLE_STEP;
+                const y = (i - COUNT / 2) * RISE;
+                dummy.position.set(Math.cos(a) * RADIUS, y, Math.sin(a) * RADIUS);
+                dummy.rotation.set(0, 0, 0);
+                dummy.lookAt(0, y, 0);
+                dummy.rotateZ((rand() - 0.5) * 0.08);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(i, dummy.matrix);
+                seeds[i] = rand();
+                accents[i] = i % 9 === 4 ? 1 : 0;
+            }
+            geometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 1));
+            geometry.setAttribute('aAccent', new THREE.InstancedBufferAttribute(accents, 1));
+            mesh.frustumCulled = false;
+
+            const coil = new THREE.Group();   // spins around its own axis
+            coil.add(mesh);
+            const tilt = new THREE.Group();   // fixed diagonal lean
+            tilt.rotation.z = 0.22;
+            tilt.add(coil);
+            scene.add(tilt);
+
+            /* Sizing */
+            function layout() {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, w < 720 ? 1.5 : 1.75));
+                renderer.setSize(w, h, false);
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+
+                const wide = w >= 860 && w / h > 1.15;
+                tilt.position.set(wide ? -camera.aspect * 1.9 : 0, 0, 0);
+                tilt.scale.setScalar(wide ? 1 : 0.72);
+                if (reduceMotion.matches) renderOnce();
+            }
+
+            /* Frame update */
+            let spin = 0.6;
+            const pm = { x: 0, y: 0 };  // smoothed pointer
+            const pt = { x: 0, y: 0 };  // pointer target
+            const k = (rate, dt) => 1 - Math.exp(-rate * dt);
+
+            function update(dt, t) {
+                stage.speed += (stage.speedTarget - stage.speed) * k(4, dt);
+                spin += dt * stage.speed;
+                coil.rotation.y = spin;
+
+                uniforms.uTime.value = t;
+                uniforms.uScan.value = ((t * 1.8) % 26) - 13;
+                uniforms.uBoost.value += (stage.boostTarget - uniforms.uBoost.value) * k(5, dt);
+
+                pm.x += (pt.x - pm.x) * k(3, dt);
+                pm.y += (pt.y - pm.y) * k(3, dt);
+                camera.position.set(pm.x * 0.9, pm.y * 0.6, 14 + (1 - stage.intro) * 7);
+                camera.lookAt(0, 0, 0);
+            }
+
+            const timer = new THREE.Timer();
+            timer.connect(document);   // pauses cleanly when the tab is hidden
+
+            function frame() {
+                timer.update();
+                update(Math.min(timer.getDelta(), 0.05), timer.getElapsed());
+                renderer.render(scene, camera);
+            }
+
+            function renderOnce() {
+                update(0, 2.0);
+                renderer.render(scene, camera);
+            }
+
+            function applyMotionPreference() {
+                if (reduceMotion.matches) {
+                    renderer.setAnimationLoop(null);
+                    stage.intro = 1;
+                    renderOnce();
+                } else {
+                    renderer.setAnimationLoop(frame);
+                }
+            }
+
+            window.addEventListener('pointermove', (e) => {
+                if (!finePointer.matches || reduceMotion.matches) return;
+                pt.x = (e.clientX / window.innerWidth) * 2 - 1;
+                pt.y = -((e.clientY / window.innerHeight) * 2 - 1);
+            }, { passive: true });
+
+            let resizeRaf = 0;
+            window.addEventListener('resize', () => {
+                cancelAnimationFrame(resizeRaf);
+                resizeRaf = requestAnimationFrame(layout);
+            });
+
+            reduceMotion.addEventListener('change', applyMotionPreference);
+
+            window.addEventListener('pagehide', (e) => {
+                if (e.persisted) return;   // keep everything alive for the back/forward cache
+                renderer.setAnimationLoop(null);
+                geometry.dispose();
+                material.dispose();
+                renderer.dispose();
+                timer.dispose();
+            });
+
+            layout();
+            applyMotionPreference();
+            return { renderer };
+        }
+
+        const sceneApi = initScene();
+
+        /* ==========================================================
+           Timeline panel: playhead, hover scrub, scene reaction
+           ========================================================== */
+        const list = $('.tracks');
+        const rows = $$('.clip-row');
+        const playhead = $('.playhead');
+        const rowY = (row) => row.offsetTop + 8;
+
+        let current = rows[0];
+        let ready = !gsap || reduceMotion.matches;
+
+        function sizePlayhead() {
+            playhead.style.height = `${rows[0].offsetHeight - 16}px`;
+        }
+
+        function placePlayhead(row, animate) {
+            const y = rowY(row);
+            if (!gsap) { playhead.style.transform = `translateY(${y}px)`; return; }
+            if (animate) gsap.to(playhead, { y, duration: 0.4, ease: 'power3.out', overwrite: 'auto' });
+            else gsap.set(playhead, { y });
+        }
+
+        function activate(row) {
+            current = row;
+            if (ready) placePlayhead(row, !reduceMotion.matches);
+        }
+
+        function setBoost(on) {
+            if (reduceMotion.matches || !sceneApi) return;
+            stage.boostTarget = on ? 1 : 0;
+            stage.speedTarget = on ? 0.45 : 0.1;
+        }
+
+        rows.forEach((row) => {
+            const link = row.firstElementChild;
+            link.addEventListener('pointerenter', () => activate(row));
+            link.addEventListener('focus', () => activate(row));
+        });
+        list.addEventListener('pointerenter', () => setBoost(true));
+        list.addEventListener('pointerleave', () => setBoost(false));
+        list.addEventListener('focusin', () => setBoost(true));
+        list.addEventListener('focusout', (e) => { if (!list.contains(e.relatedTarget)) setBoost(false); });
+
+        window.addEventListener('resize', () => { sizePlayhead(); placePlayhead(current, false); });
+
+        sizePlayhead();
+        placePlayhead(current, false);
+
+        /* ==========================================================
+           Intro: playhead sweeps down the timeline, clips arrive behind it
+           ========================================================== */
+        if (gsap && !reduceMotion.matches) {
+            stage.intro = 0;
+            const last = rows[rows.length - 1];
+            const perRow = 0.09;
+
+            const tl = gsap.timeline({ defaults: { ease: 'power3.out' }, onComplete: () => { ready = true; placePlayhead(current, false); } });
+
+            tl.fromTo('#scene', { autoAlpha: 0 }, { autoAlpha: 1, duration: 1.8, ease: 'power2.out' }, 0)
+              .to(stage, { intro: 1, duration: 2.4, ease: 'power3.out' }, 0)
+              .from('.char', { yPercent: 118, duration: 1, ease: 'power4.out', stagger: 0.07 }, 0.15)
+              .from('.id__eyebrow, .id__tag, .id__lede, .gec li', { y: 16, autoAlpha: 0, duration: 0.7, stagger: 0.07 }, 0.55)
+              .from('.panel__head, .ruler', { autoAlpha: 0, duration: 0.6 }, 0.45)
+              .from(rows, { autoAlpha: 0, x: 32, duration: 0.6, stagger: perRow }, 0.7)
+              .fromTo(playhead,
+                  { y: rowY(rows[0]), autoAlpha: 0 },
+                  { y: rowY(last), autoAlpha: 1, duration: perRow * (rows.length - 1) + 0.3, ease: 'none' }, 0.7)
+              .to(playhead, { y: rowY(rows[0]), duration: 0.7, ease: 'power3.inOut' });
+
+            // Children are now in their start state; drop the pre-hide class
+            root.classList.remove('will-animate');
+        } else {
+            root.classList.remove('will-animate');
+        }
+    </script>
+</body>
+</html>
